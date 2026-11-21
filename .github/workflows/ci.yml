@@ -1,0 +1,79 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Lint, Typecheck, Migrate & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: tiffin_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/tiffin_test_db
+      DIRECT_DATABASE_URL: postgresql://postgres:password@localhost:5432/tiffin_test_db
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci_test_secret_32_characters_long_min_for_security_1234
+      ALLOW_DEMO_BYPASS_OTP: "true"
+      SHOW_DEMO_PERSONA_BAR: "true"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.21.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm turbo run typecheck
+
+      - name: Run Drizzle Migrations
+        run: pnpm --filter @tiffin/db db:migrate
+
+      - name: Run Database Seed (Idempotency Check 1)
+        run: pnpm --filter @tiffin/db db:seed
+
+      - name: Run Database Seed (Idempotency Check 2)
+        run: pnpm --filter @tiffin/db db:seed
+
+      - name: Execute Tests
+        run: pnpm vitest run

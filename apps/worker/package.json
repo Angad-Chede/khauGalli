@@ -1,0 +1,24 @@
+{
+  "name": "@tiffin/worker",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tiffin/db": "workspace:*",
+    "@tiffin/shared": "workspace:*",
+    "bullmq": "^5.21.2",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.4.1",
+    "pino": "^9.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "pino-pretty": "^13.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
