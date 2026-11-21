@@ -8,6 +8,13 @@
       "when": 1795293698880,
       "tag": "0000_lonely_doomsday",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795297000000,
+      "tag": "0001_phase1_catalog_enhancements",
+      "breakpoints": true
     }
   ]
 }

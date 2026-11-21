@@ -45,20 +45,39 @@ export const menuItems = pgTable(
   ]
 );
 
-export const itemModifiers = pgTable(
-  'item_modifiers',
+export const modifierGroups = pgTable(
+  'modifier_groups',
   {
     id: uuid('id').primaryKey(),
     menuItemId: uuid('menu_item_id')
       .notNull()
       .references(() => menuItems.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 100 }).notNull(),
-    pricePaise: integer('price_paise').notNull().default(0),
-    isVeg: boolean('is_veg').notNull().default(true),
+    minSelections: integer('min_selections').notNull().default(0),
+    maxSelections: integer('max_selections').notNull().default(1),
+    sortOrder: integer('sort_order').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    index('idx_item_modifiers_item_id').on(table.menuItemId),
+    index('idx_modifier_groups_item_id').on(table.menuItemId, table.sortOrder),
+  ]
+);
+
+export const modifierOptions = pgTable(
+  'modifier_options',
+  {
+    id: uuid('id').primaryKey(),
+    modifierGroupId: uuid('modifier_group_id')
+      .notNull()
+      .references(() => modifierGroups.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 100 }).notNull(),
+    pricePaise: integer('price_paise').notNull().default(0),
+    isVeg: boolean('is_veg').notNull().default(true),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_modifier_options_group_id').on(table.modifierGroupId, table.sortOrder),
   ]
 );
 
@@ -66,5 +85,7 @@ export type MenuCategory = typeof menuCategories.$inferSelect;
 export type NewMenuCategory = typeof menuCategories.$inferInsert;
 export type MenuItem = typeof menuItems.$inferSelect;
 export type NewMenuItem = typeof menuItems.$inferInsert;
-export type ItemModifier = typeof itemModifiers.$inferSelect;
-export type NewItemModifier = typeof itemModifiers.$inferInsert;
+export type ModifierGroup = typeof modifierGroups.$inferSelect;
+export type NewModifierGroup = typeof modifierGroups.$inferInsert;
+export type ModifierOption = typeof modifierOptions.$inferSelect;
+export type NewModifierOption = typeof modifierOptions.$inferInsert;

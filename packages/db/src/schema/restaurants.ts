@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, boolean, integer, jsonb, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, boolean, integer, numeric, jsonb, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { geographyPoint } from './custom-types';
 import { sql } from 'drizzle-orm';
@@ -13,6 +13,12 @@ export const restaurants = pgTable(
     cuisineTypes: text('cuisine_types').array().notNull().$default(() => []),
     geog: geographyPoint('geog').notNull(),
     isOpen: boolean('is_open').notNull().default(true),
+    acceptingOrders: boolean('accepting_orders').notNull().default(true), // Manual pause toggle
+    menuVersion: integer('menu_version').notNull().default(1), // Incremented on every staff write for cache busting
+    ratingAverage: numeric('rating_average', { precision: 3, scale: 2 }).notNull().default('4.50'),
+    ratingCount: integer('rating_count').notNull().default(0),
+    heroImageUrl: text('hero_image_url'),
+    deliveryRadiusMeters: integer('delivery_radius_meters').notNull().default(5000), // Serviceable radius (5 km default)
     operatingHours: jsonb('operating_hours').notNull().$default(() => ({})),
     prepTimeDefaultMinutes: integer('prep_time_default_minutes').notNull().default(20),
     commissionBps: integer('commission_bps').notNull().default(2000),
@@ -25,7 +31,7 @@ export const restaurants = pgTable(
   (table) => [
     index('idx_restaurants_geog').using('gist', table.geog),
     index('idx_restaurants_name_trgm').using('gin', sql`${table.name} gin_trgm_ops`),
-    index('idx_restaurants_status_open').on(table.status, table.isOpen),
+    index('idx_restaurants_status_open').on(table.status, table.isOpen, table.acceptingOrders),
   ]
 );
 
@@ -39,7 +45,7 @@ export const restaurantStaff = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    staffRole: varchar('staff_role', { length: 30 }).notNull(),
+    staffRole: varchar('staff_role', { length: 30 }).notNull(), // OWNER, MANAGER, KITCHEN
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

@@ -4,6 +4,9 @@ import sensible from '@fastify/sensible';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { authRoutes } from './modules/auth/auth.routes';
+import { catalogRoutes } from './modules/catalog/catalog.routes';
+import { cartRoutes } from './modules/cart/cart.routes';
+import { restaurantPortalRoutes } from './modules/restaurant-portal/portal.routes';
 
 export async function buildServer(): Promise<FastifyInstance> {
   const server = Fastify({
@@ -22,7 +25,7 @@ export async function buildServer(): Promise<FastifyInstance> {
     openapi: {
       info: {
         title: 'Tiffin (KhauGalli) API',
-        description: 'Multi-role Food Ordering & Delivery Platform API',
+        description: 'Multi-role Food Ordering & Delivery Platform API (Customer, Kitchen, Delivery, Admin)',
         version: '1.0.0',
       },
       servers: [
@@ -48,8 +51,11 @@ export async function buildServer(): Promise<FastifyInstance> {
     };
   });
 
-  // Auth routes
+  // Core Phase 0 & Phase 1 Route Modules
   await server.register(authRoutes, { prefix: '/auth' });
+  await server.register(catalogRoutes);
+  await server.register(cartRoutes, { prefix: '/cart' });
+  await server.register(restaurantPortalRoutes, { prefix: '/r' });
 
   return server;
 }

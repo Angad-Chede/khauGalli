@@ -7,7 +7,8 @@ import {
   restaurantStaff,
   menuCategories,
   menuItems,
-  itemModifiers,
+  modifierGroups,
+  modifierOptions,
 } from './schema/index';
 import { sql } from 'drizzle-orm';
 
@@ -145,7 +146,17 @@ export async function seedDatabase() {
       });
   }
 
-  // 4. Seed 5 Diverse Restaurants with real coordinates
+  // 4. Seed 5 Diverse Restaurants with real coordinates, hours and metrics
+  const standardHours = {
+    monday: { open: '09:00', close: '23:30' },
+    tuesday: { open: '09:00', close: '23:30' },
+    wednesday: { open: '09:00', close: '23:30' },
+    thursday: { open: '09:00', close: '23:30' },
+    friday: { open: '09:00', close: '23:30' },
+    saturday: { open: '09:00', close: '23:30' },
+    sunday: { open: '09:00', close: '23:30' },
+  };
+
   const seededRestaurants = [
     {
       id: SEED_IDS.REST_KHAU_GALLI,
@@ -153,9 +164,14 @@ export async function seedDatabase() {
       slug: 'khau-galli-chaat',
       description: 'Authentic Mumbai & Delhi street chaats, pav bhaji, and quick bites.',
       cuisineTypes: ['Street Food', 'Chaat', 'North Indian'],
-      geog: { lng: 77.6412, lat: 12.9719 }, // Indiranagar
+      geog: { lng: 77.6412, lat: 12.9719 }, // Indiranagar (~70m from Asha Home)
       isOpen: true,
-      operatingHours: { open: '10:00', close: '23:00' },
+      acceptingOrders: true,
+      menuVersion: 1,
+      ratingAverage: '4.60',
+      ratingCount: 142,
+      deliveryRadiusMeters: 5000,
+      operatingHours: standardHours,
       prepTimeDefaultMinutes: 15,
       commissionBps: 2000,
       gstin: '29ABCDE1234F1Z5',
@@ -168,9 +184,14 @@ export async function seedDatabase() {
       slug: 'dosa-corner',
       description: 'Crispy ghee dosas, piping hot podi idlis, and traditional filter coffee.',
       cuisineTypes: ['South Indian', 'Tiffin', 'Breakfast'],
-      geog: { lng: 77.6245, lat: 12.9352 }, // Koramangala
+      geog: { lng: 77.6245, lat: 12.9352 }, // Koramangala (~4.4km from Asha Home)
       isOpen: true,
-      operatingHours: { open: '07:00', close: '22:30' },
+      acceptingOrders: true,
+      menuVersion: 1,
+      ratingAverage: '4.70',
+      ratingCount: 280,
+      deliveryRadiusMeters: 6000,
+      operatingHours: standardHours,
       prepTimeDefaultMinutes: 12,
       commissionBps: 1800,
       gstin: '29BCDEF2345G2Z6',
@@ -183,9 +204,14 @@ export async function seedDatabase() {
       slug: 'biryani-darbar',
       description: 'Slow-cooked fragrant dum biryanis, succulent kebabs, and rich gravies.',
       cuisineTypes: ['Biryani', 'Mughlai', 'Kebabs'],
-      geog: { lng: 77.6408, lat: 12.9784 }, // Indiranagar 100ft Rd
+      geog: { lng: 77.6408, lat: 12.9784 }, // Indiranagar 100ft Rd (~750m from Asha Home)
       isOpen: true,
-      operatingHours: { open: '11:30', close: '23:30' },
+      acceptingOrders: true,
+      menuVersion: 1,
+      ratingAverage: '4.80',
+      ratingCount: 520,
+      deliveryRadiusMeters: 6000,
+      operatingHours: standardHours,
       prepTimeDefaultMinutes: 25,
       commissionBps: 2200,
       gstin: '29CDEFG3456H3Z7',
@@ -198,9 +224,14 @@ export async function seedDatabase() {
       slug: 'punjab-da-dhaba',
       description: 'Hearty buttery curries, tandoori breads, dal makhani, and thick lassi.',
       cuisineTypes: ['North Indian', 'Punjabi', 'Tandoor'],
-      geog: { lng: 77.6320, lat: 12.9340 }, // Koramangala 4th Block
+      geog: { lng: 77.6320, lat: 12.9340 }, // Koramangala 4th Block (~4.5km)
       isOpen: true,
-      operatingHours: { open: '12:00', close: '23:00' },
+      acceptingOrders: true,
+      menuVersion: 1,
+      ratingAverage: '4.40',
+      ratingCount: 195,
+      deliveryRadiusMeters: 5000,
+      operatingHours: standardHours,
       prepTimeDefaultMinutes: 20,
       commissionBps: 2000,
       gstin: '29DEFGHI4567I4Z8',
@@ -213,9 +244,14 @@ export async function seedDatabase() {
       slug: 'bowl-and-greens',
       description: 'Nutritious grain bowls, organic farm salads, and cold-pressed elixirs.',
       cuisineTypes: ['Healthy', 'Salads', 'Continental'],
-      geog: { lng: 77.6387, lat: 12.9609 }, // Domlur
+      geog: { lng: 77.6387, lat: 12.9609 }, // Domlur (~1.2km from Asha Home)
       isOpen: true,
-      operatingHours: { open: '09:00', close: '21:30' },
+      acceptingOrders: true,
+      menuVersion: 1,
+      ratingAverage: '4.50',
+      ratingCount: 88,
+      deliveryRadiusMeters: 5000,
+      operatingHours: standardHours,
       prepTimeDefaultMinutes: 15,
       commissionBps: 2000,
       gstin: '29EFGHIJ5678J5Z9',
@@ -237,6 +273,11 @@ export async function seedDatabase() {
           cuisineTypes: r.cuisineTypes,
           geog: r.geog,
           isOpen: r.isOpen,
+          acceptingOrders: r.acceptingOrders,
+          menuVersion: r.menuVersion,
+          ratingAverage: r.ratingAverage,
+          ratingCount: r.ratingCount,
+          deliveryRadiusMeters: r.deliveryRadiusMeters,
           operatingHours: r.operatingHours,
           prepTimeDefaultMinutes: r.prepTimeDefaultMinutes,
           commissionBps: r.commissionBps,
@@ -262,7 +303,7 @@ export async function seedDatabase() {
       },
     });
 
-  // 6. Seed Categories, Items, and Modifiers for Khau Galli Chaat
+  // 6. Seed Categories and Dishes for Khau Galli Chaat
   const catChaats = '018f0000-0000-7000-8000-000000000301';
   const catMains = '018f0000-0000-7000-8000-000000000302';
   const catDrinks = '018f0000-0000-7000-8000-000000000303';
@@ -343,27 +384,84 @@ export async function seedDatabase() {
       },
     });
 
-  // Seed Modifiers for Pav Bhaji
-  const modExtraPav = '018f0000-0000-7000-8000-000000000501';
-  const modExtraButter = '018f0000-0000-7000-8000-000000000502';
-  const modExtraCheese = '018f0000-0000-7000-8000-000000000503';
+  // 7. Seed Hierarchical Modifier Groups & Options
+  // Group 1 for Pav Bhaji: "Pav Options" (min: 0, max: 2)
+  const grpPav = '018f0000-0000-7000-8000-000000000501';
+  // Group 2 for Pav Bhaji: "Toppings & Extra Butter" (min: 0, max: 2)
+  const grpToppings = '018f0000-0000-7000-8000-000000000502';
+  // Group 1 for Pani Puri: "Spice Level" (min: 1, max: 1 - Mandatory)
+  const grpSpice = '018f0000-0000-7000-8000-000000000503';
 
   await db
-    .insert(itemModifiers)
+    .insert(modifierGroups)
     .values([
-      { id: modExtraPav, menuItemId: itemPavBhaji, name: 'Extra Butter Pav (Pair)', pricePaise: 4000, isVeg: true },
-      { id: modExtraButter, menuItemId: itemPavBhaji, name: 'Extra Amul Butter Cube', pricePaise: 2500, isVeg: true },
-      { id: modExtraCheese, menuItemId: itemPavBhaji, name: 'Grated Amul Cheese', pricePaise: 3500, isVeg: true },
+      {
+        id: grpPav,
+        menuItemId: itemPavBhaji,
+        name: 'Pav Options',
+        minSelections: 0,
+        maxSelections: 2,
+        sortOrder: 1,
+      },
+      {
+        id: grpToppings,
+        menuItemId: itemPavBhaji,
+        name: 'Toppings & Extra Butter',
+        minSelections: 0,
+        maxSelections: 2,
+        sortOrder: 2,
+      },
+      {
+        id: grpSpice,
+        menuItemId: itemPaniPuri,
+        name: 'Spice Level',
+        minSelections: 1,
+        maxSelections: 1,
+        sortOrder: 1,
+      },
     ])
     .onConflictDoUpdate({
-      target: itemModifiers.id,
+      target: modifierGroups.id,
+      set: {
+        name: sql`EXCLUDED.name`,
+        minSelections: sql`EXCLUDED.min_selections`,
+        maxSelections: sql`EXCLUDED.max_selections`,
+      },
+    });
+
+  // Options for Pav Options
+  const optExtraPavPair = '018f0000-0000-7000-8000-000000000601';
+  const optSinglePav = '018f0000-0000-7000-8000-000000000602';
+
+  // Options for Toppings
+  const optExtraButter = '018f0000-0000-7000-8000-000000000603';
+  const optExtraCheese = '018f0000-0000-7000-8000-000000000604';
+
+  // Options for Spice Level
+  const optMediumSpicy = '018f0000-0000-7000-8000-000000000605';
+  const optTeekhaSpicy = '018f0000-0000-7000-8000-000000000606';
+  const optMeethaSweet = '018f0000-0000-7000-8000-000000000607';
+
+  await db
+    .insert(modifierOptions)
+    .values([
+      { id: optExtraPavPair, modifierGroupId: grpPav, name: 'Extra Butter Pav (Pair)', pricePaise: 4000, isVeg: true, sortOrder: 1 },
+      { id: optSinglePav, modifierGroupId: grpPav, name: 'Single Extra Pav', pricePaise: 2000, isVeg: true, sortOrder: 2 },
+      { id: optExtraButter, modifierGroupId: grpToppings, name: 'Extra Amul Butter Cube', pricePaise: 2500, isVeg: true, sortOrder: 1 },
+      { id: optExtraCheese, modifierGroupId: grpToppings, name: 'Grated Amul Cheese', pricePaise: 3500, isVeg: true, sortOrder: 2 },
+      { id: optMediumSpicy, modifierGroupId: grpSpice, name: 'Medium Spicy (Regular)', pricePaise: 0, isVeg: true, sortOrder: 1 },
+      { id: optTeekhaSpicy, modifierGroupId: grpSpice, name: 'Teekha / Extra Spicy', pricePaise: 0, isVeg: true, sortOrder: 2 },
+      { id: optMeethaSweet, modifierGroupId: grpSpice, name: 'Meetha / Sweet Tamarind', pricePaise: 0, isVeg: true, sortOrder: 3 },
+    ])
+    .onConflictDoUpdate({
+      target: modifierOptions.id,
       set: {
         name: sql`EXCLUDED.name`,
         pricePaise: sql`EXCLUDED.price_paise`,
       },
     });
 
-  console.log('✓ Database seeded successfully and idempotently!');
+  console.log('✓ Database seeded successfully and idempotently with Phase 1 catalog data!');
 }
 
 // Execute seed only when executed directly via CLI

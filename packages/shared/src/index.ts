@@ -1,6 +1,7 @@
-export * from './uuid.js';
-export * from './env.js';
-export * from './formatters.js';
+export * from './uuid';
+export * from './env';
+export * from './formatters';
+export * from './pricing';
 
 export const ROLES = {
   CUSTOMER: 'CUSTOMER',
