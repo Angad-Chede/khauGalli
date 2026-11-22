@@ -9,6 +9,8 @@ import {
   menuItems,
   modifierGroups,
   modifierOptions,
+  riders,
+  riderCurrentLocation,
 } from './schema/index';
 import { sql } from 'drizzle-orm';
 
@@ -19,6 +21,7 @@ export const SEED_IDS = {
   USER_RAVI: '018f0000-0000-7000-8000-000000000012',
   USER_IMRAN: '018f0000-0000-7000-8000-000000000013',
   USER_MEERA: '018f0000-0000-7000-8000-000000000014',
+  RIDER_IMRAN: '018f0000-0000-7000-8000-000000000031',
   ADDR_ASHA_HOME: '018f0000-0000-7000-8000-000000000021',
   ADDR_ASHA_WORK: '018f0000-0000-7000-8000-000000000022',
   REST_KHAU_GALLI: '018f0000-0000-7000-8000-000000000101',
@@ -461,7 +464,46 @@ export async function seedDatabase() {
       },
     });
 
-  console.log('✓ Database seeded successfully and idempotently with Phase 1 catalog data!');
+  // 6. Seed Imran Khan as active delivery partner (Phase 3)
+  await db
+    .insert(riders)
+    .values({
+      id: SEED_IDS.RIDER_IMRAN,
+      userId: SEED_IDS.USER_IMRAN,
+      vehicleType: 'MOTORCYCLE',
+      vehicleNumber: 'KA-01-EQ-4821',
+      kycStatus: 'VERIFIED',
+      isOnline: true,
+      isBusy: false,
+      ratingAverage: '4.90',
+      ratingCount: 84,
+    })
+    .onConflictDoUpdate({
+      target: riders.id,
+      set: {
+        isOnline: true,
+        isBusy: false,
+        vehicleNumber: 'KA-01-EQ-4821',
+      },
+    });
+
+  await db
+    .insert(riderCurrentLocation)
+    .values({
+      riderId: SEED_IDS.RIDER_IMRAN,
+      geog: { lng: 77.6390, lat: 12.9710 }, // Indiranagar, ~200m from Khau Galli Chaat
+      headingDegrees: 90,
+      speedKmh: '0.0',
+    })
+    .onConflictDoUpdate({
+      target: riderCurrentLocation.riderId,
+      set: {
+        geog: { lng: 77.6390, lat: 12.9710 },
+        updatedAt: new Date(),
+      },
+    });
+
+  console.log('✓ Database seeded successfully and idempotently with Phase 1 & 3 data!');
 }
 
 // Execute seed only when executed directly via CLI

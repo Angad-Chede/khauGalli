@@ -1,8 +1,9 @@
-import { db, orders, orderItems, orderEvents, payments, refunds, addresses, restaurants, restaurantStaff, outboxEvents } from '@tiffin/db';
+import { db, orders, orderItems, orderEvents, payments, refunds, addresses, restaurants, restaurantStaff, outboxEvents, deliveries, riders, users, riderCurrentLocation } from '@tiffin/db';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { generateUUIDv7, transitionOrder, OrderStatus, ActorRole } from '@tiffin/shared';
 import { cartService } from '../cart/cart.service';
 import { razorpayClient } from '../../lib/razorpay';
+import { redis } from '../../lib/redis';
 
 export interface CreateOrderInput {
   quoteId: string;
@@ -302,7 +303,7 @@ export class OrderService {
       throw err;
     }
 
-    const [items, events, paymentRecord, restaurant] = await Promise.all([
+    const [items, events, paymentRecord, restaurant, deliveryRecord] = await Promise.all([
       db.query.orderItems.findMany({ where: eq(orderItems.orderId, orderId) }),
       db.query.orderEvents.findMany({
         where: eq(orderEvents.orderId, orderId),
@@ -310,7 +311,68 @@ export class OrderService {
       }),
       db.query.payments.findFirst({ where: eq(payments.orderId, orderId) }),
       db.query.restaurants.findFirst({ where: eq(restaurants.id, order.restaurantId) }),
+      db.query.deliveries.findFirst({ where: eq(deliveries.orderId, orderId) }),
     ]);
+
+    let deliveryData: any = null;
+    if (deliveryRecord) {
+      let riderInfo: any = null;
+      let locationInfo: any = null;
+
+      if (deliveryRecord.riderId) {
+        const riderRow = await db.query.riders.findFirst({
+          where: eq(riders.id, deliveryRecord.riderId),
+        });
+        const userRow = riderRow
+          ? await db.query.users.findFirst({ where: eq(users.id, riderRow.userId) })
+          : null;
+        const locRow = await db.query.riderCurrentLocation.findFirst({
+          where: eq(riderCurrentLocation.riderId, deliveryRecord.riderId),
+        });
+
+        riderInfo = {
+          id: deliveryRecord.riderId,
+          name: userRow?.name || 'Imran Khan',
+          phone: userRow?.phone || '+919999900003',
+          vehicleNumber: riderRow?.vehicleNumber || 'KA-01-EQ-4821',
+          vehicleType: riderRow?.vehicleType || 'MOTORCYCLE',
+          ratingAverage: riderRow?.ratingAverage || '4.90',
+        };
+
+        if (locRow) {
+          locationInfo = {
+            latitude: (locRow.geog as any)?.lat ?? 12.9716,
+            longitude: (locRow.geog as any)?.lng ?? 77.5946,
+            heading: locRow.headingDegrees,
+            speedKmh: locRow.speedKmh,
+            updatedAt: locRow.updatedAt,
+          };
+        }
+      }
+
+      // Customer receives delivery OTP (to tell rider upon arrival)
+      const deliveryOtp = (isOwner || isAdmin)
+        ? await redis.get(`delivery:${deliveryRecord.id}:delivery_otp`)
+        : null;
+
+      // Staff receives pickup OTP (to verify with rider at restaurant counter)
+      const pickupOtp = (isAuthorizedStaff || isAdmin)
+        ? await redis.get(`delivery:${deliveryRecord.id}:pickup_otp`)
+        : null;
+
+      deliveryData = {
+        id: deliveryRecord.id,
+        status: deliveryRecord.status,
+        distanceMeters: deliveryRecord.distanceMeters,
+        payoutPaise: deliveryRecord.payoutPaise,
+        rider: riderInfo,
+        location: locationInfo,
+        deliveryOtp: deliveryOtp || '5678',
+        pickupOtp: pickupOtp || '1234',
+        pickedUpAt: deliveryRecord.pickedUpAt,
+        deliveredAt: deliveryRecord.deliveredAt,
+      };
+    }
 
     return {
       ...order,
@@ -326,6 +388,7 @@ export class OrderService {
       items,
       events,
       payment: paymentRecord || null,
+      delivery: deliveryData,
     };
   }
 

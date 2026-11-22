@@ -9,6 +9,8 @@ import { cartRoutes } from './modules/cart/cart.routes';
 import { restaurantPortalRoutes } from './modules/restaurant-portal/portal.routes';
 import { orderRoutes } from './modules/orders/order.routes';
 import { paymentRoutes } from './modules/payments/payment.routes';
+import { sseRealtimeRoutes } from './modules/realtime/sse.routes';
+import { deliveryRoutes } from './modules/deliveries/delivery.routes';
 
 export async function buildServer(): Promise<FastifyInstance> {
   const server = Fastify({
@@ -77,6 +79,8 @@ export async function buildServer(): Promise<FastifyInstance> {
   await server.register(restaurantPortalRoutes, { prefix: '/r' });
   await server.register(orderRoutes, { prefix: '/orders' });
   await server.register(paymentRoutes);
+  await server.register(sseRealtimeRoutes, { prefix: '/realtime' });
+  await server.register(deliveryRoutes, { prefix: '/rider' });
 
   return server;
 }

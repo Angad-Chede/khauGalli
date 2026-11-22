@@ -1,12 +1,16 @@
 import { Redis } from 'ioredis';
+import { EventEmitter } from 'node:events';
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
 // Standalone in-memory fallback map for unit tests where external Redis service is omitted
 const memoryStore = new Map<string, { val: string; expiresAt: number | null }>();
+const memoryPubSub = new EventEmitter();
+memoryPubSub.setMaxListeners(200);
 
 export class SafeRedisClient {
   private client: Redis | null = null;
+  private subClient: Redis | null = null;
   private isConnected = false;
 
   constructor() {
@@ -111,6 +115,34 @@ export class SafeRedisClient {
       return 1;
     }
     return 0;
+  }
+
+  /**
+   * Publish message to channel (supports both Redis and in-memory event bus)
+   */
+  async publish(channel: string, message: string): Promise<number> {
+    // Always dispatch to in-memory emitter for local test listeners
+    memoryPubSub.emit(channel, message);
+
+    if (this.isConnected && this.client) {
+      try {
+        return await this.client.publish(channel, message);
+      } catch {
+        // Fallback
+      }
+    }
+    return 1;
+  }
+
+  /**
+   * Subscribe to channel. Returns an unsubscribe teardown function.
+   */
+  subscribe(channel: string, listener: (message: string) => void): () => void {
+    memoryPubSub.on(channel, listener);
+
+    return () => {
+      memoryPubSub.off(channel, listener);
+    };
   }
 }
 

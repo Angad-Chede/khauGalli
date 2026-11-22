@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -15,6 +15,10 @@ import {
   MapPin,
   RefreshCw,
   ShoppingBag,
+  ShieldCheck,
+  Navigation,
+  Phone,
+  Radio,
 } from 'lucide-react';
 import { formatPaiseToInr } from '@tiffin/shared';
 
@@ -34,6 +38,36 @@ interface OrderItem {
   modifiersTotalPaise: number;
   lineTotalPaise: number;
   selectedModifiersSnapshot?: { name: string; pricePaise: number }[];
+}
+
+interface RiderInfo {
+  id: string;
+  name: string;
+  phone: string;
+  vehicleNumber: string;
+  vehicleType: string;
+  ratingAverage: string;
+}
+
+interface RiderLocation {
+  latitude: number;
+  longitude: number;
+  heading: number;
+  speedKmh: number;
+  timestamp: string;
+}
+
+interface DeliveryDetails {
+  id: string;
+  status: string;
+  distanceMeters: number;
+  payoutPaise: number;
+  rider?: RiderInfo | null;
+  location?: RiderLocation | null;
+  deliveryOtp?: string;
+  pickupOtp?: string;
+  pickedUpAt?: string;
+  deliveredAt?: string;
 }
 
 interface OrderDetail {
@@ -67,6 +101,7 @@ interface OrderDetail {
   items: OrderItem[];
   events: OrderEvent[];
   payment?: any;
+  delivery?: DeliveryDetails | null;
 }
 
 const ORDER_STEPS = [
@@ -87,15 +122,13 @@ export default function OrderTrackingPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancellationReason, setCancellationReason] = useState('Changed my mind');
+  const [isSseConnected, setIsSseConnected] = useState(false);
+  const [liveLocation, setLiveLocation] = useState<RiderLocation | null>(null);
 
+  const eventSourceRef = useRef<EventSource | null>(null);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-  useEffect(() => {
-    fetchOrder();
-    const interval = setInterval(fetchOrder, 3000);
-    return () => clearInterval(interval);
-  }, [orderId]);
-
+  // Fetch full order state
   const fetchOrder = async () => {
     const token = localStorage.getItem('tiffin_token');
     if (!token) return;
@@ -108,6 +141,9 @@ export default function OrderTrackingPage() {
       if (res.ok) {
         const data = await res.json();
         setOrder(data.order);
+        if (data.order?.delivery?.location) {
+          setLiveLocation(data.order.delivery.location);
+        }
       }
     } catch (err) {
       console.error('Failed to load order:', err);
@@ -115,6 +151,95 @@ export default function OrderTrackingPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchOrder();
+
+    // Setup native Server-Sent Events (SSE) stream
+    const token = localStorage.getItem('tiffin_token');
+    if (!token || !orderId) return;
+
+    try {
+      const sseUrl = `${apiUrl}/realtime/orders/${orderId}?token=${token}`;
+      const sse = new EventSource(sseUrl);
+      eventSourceRef.current = sse;
+
+      sse.onopen = () => {
+        setIsSseConnected(true);
+      };
+
+      sse.addEventListener('connected', () => {
+        setIsSseConnected(true);
+      });
+
+      // Handle order status updates
+      sse.addEventListener('order.update', () => {
+        fetchOrder();
+      });
+
+      sse.addEventListener('order.event', () => {
+        fetchOrder();
+      });
+
+      sse.addEventListener('delivery.assigned', (event: MessageEvent) => {
+        try {
+          const payload = JSON.parse(event.data);
+          setOrder((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              delivery: {
+                ...(prev.delivery || {
+                  id: payload.deliveryId,
+                  status: 'ASSIGNED',
+                  distanceMeters: 2000,
+                  payoutPaise: 4000,
+                }),
+                rider: payload.rider,
+              },
+            };
+          });
+        } catch {
+          fetchOrder();
+        }
+      });
+
+      sse.addEventListener('order.picked_up', () => {
+        fetchOrder();
+      });
+
+      sse.addEventListener('order.delivered', () => {
+        fetchOrder();
+      });
+
+      // Live GPS rider location push
+      sse.addEventListener('order.rider_location', (event: MessageEvent) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.location) {
+            setLiveLocation(payload.location);
+          }
+        } catch {
+          // Ignored
+        }
+      });
+
+      sse.onerror = () => {
+        setIsSseConnected(false);
+        // On disconnect, refetch full state to catch up
+        fetchOrder();
+      };
+    } catch (err) {
+      console.error('SSE initialization error:', err);
+    }
+
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, [orderId]);
 
   const handleCancelOrder = async () => {
     const token = localStorage.getItem('tiffin_token');
@@ -147,7 +272,7 @@ export default function OrderTrackingPage() {
   if (isLoading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center text-slate-500 text-sm">
-        Loading live order tracker...
+        Connecting to live order tracker...
       </div>
     );
   }
@@ -187,6 +312,7 @@ export default function OrderTrackingPage() {
   };
 
   const currentStep = stepIndexMap[order.status] ?? 0;
+  const isAssignedOrDelivering = ['READY', 'PICKED_UP', 'DELIVERED'].includes(order.status) || Boolean(order.delivery?.rider);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -200,7 +326,19 @@ export default function OrderTrackingPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-xl font-black text-slate-900">{order.orderNumber}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-black text-slate-900">{order.orderNumber}</h1>
+              {isSseConnected ? (
+                <span className="flex items-center gap-1 text-[10px] font-black tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live SSE
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-[10px] font-black tracking-wider uppercase text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                  Connecting...
+                </span>
+              )}
+            </div>
             <span className="text-xs text-slate-500 font-semibold">
               {order.restaurant?.name || 'Restaurant'} • {order.paymentMode}
             </span>
@@ -210,7 +348,7 @@ export default function OrderTrackingPage() {
         <button
           onClick={fetchOrder}
           className="p-2 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
-          title="Refresh"
+          title="Refresh State"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -249,7 +387,7 @@ export default function OrderTrackingPage() {
                 {order.status === 'PLACED' && 'Waiting for kitchen to accept your order...'}
                 {order.status === 'ACCEPTED' && 'Order accepted! Cooking will begin shortly.'}
                 {order.status === 'PREPARING' && `Kitchen is preparing your dishes (Est: ${order.prepTimeMinutes || 20}m)`}
-                {order.status === 'READY' && 'Food is packed and ready on counter!'}
+                {order.status === 'READY' && 'Food is packed! Dispatching nearby delivery partner.'}
                 {order.status === 'PICKED_UP' && 'Rider has picked up food and is on the way!'}
                 {order.status === 'DELIVERED' && 'Order successfully delivered. Enjoy your meal!'}
               </span>
@@ -299,6 +437,75 @@ export default function OrderTrackingPage() {
               >
                 Cancel Order (Before Kitchen Accepts)
               </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Delivery Confirmation OTP Card (Prominent display for customer) */}
+      {!isTerminalFailure && order.delivery?.deliveryOtp && order.status !== 'DELIVERED' && (
+        <div className="bg-gradient-to-r from-orange-500 to-amber-600 rounded-3xl p-6 text-white shadow-md space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5" />
+              <span className="text-xs uppercase font-black tracking-wider">
+                Delivery Confirmation Code
+              </span>
+            </div>
+            <span className="text-[10px] bg-white/20 font-bold px-2 py-0.5 rounded-full">
+              4 Digits
+            </span>
+          </div>
+
+          <div className="text-center py-2">
+            <div className="text-4xl font-mono font-black tracking-widest text-white drop-shadow-sm">
+              {order.delivery.deliveryOtp}
+            </div>
+            <p className="text-xs text-orange-100 mt-1">
+              Please share this code with your delivery partner only when you receive your food package.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Assigned Delivery Partner Card */}
+      {order.delivery?.rider && (
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <Bike className="w-4 h-4 text-orange-600" />
+              Delivery Partner Assigned
+            </span>
+            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black px-2 py-0.5 rounded-full">
+              {order.delivery.rider.ratingAverage || '4.90'} ★
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-black text-slate-900">
+                {order.delivery.rider.name}
+              </h3>
+              <p className="text-xs text-slate-500">
+                Vehicle: {order.delivery.rider.vehicleNumber} ({order.delivery.rider.vehicleType})
+              </p>
+            </div>
+
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Phone className="w-4 h-4" />
+            </div>
+          </div>
+
+          {/* Live GPS Telemetry if rider is on the road */}
+          {liveLocation && order.status === 'PICKED_UP' && (
+            <div className="bg-blue-50 rounded-2xl p-3 border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Radio className="w-4 h-4 text-blue-600 animate-pulse" />
+                <span>Rider on route: {liveLocation.speedKmh} km/h</span>
+              </div>
+              <span className="text-[11px] font-mono text-blue-700">
+                {liveLocation.latitude.toFixed(4)}, {liveLocation.longitude.toFixed(4)}
+              </span>
             </div>
           )}
         </div>

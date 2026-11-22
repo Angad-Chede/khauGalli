@@ -6,3 +6,5 @@ export * from './menus';
 export * from './audit';
 export * from './orders';
 export * from './payments';
+export * from './riders';
+export * from './deliveries';
