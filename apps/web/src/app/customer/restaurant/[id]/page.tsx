@@ -536,7 +536,7 @@ export default function RestaurantMenuPage() {
               <button
                 disabled={cartQuote.hasUnavailableItems}
                 onClick={() => {
-                  alert('Phase 1 Cart & Quote complete! Phase 2 will execute Checkout & Payment.');
+                  router.push('/customer/checkout');
                 }}
                 className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md transition ${
                   cartQuote.hasUnavailableItems
@@ -544,7 +544,7 @@ export default function RestaurantMenuPage() {
                     : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                 }`}
               >
-                Proceed to Checkout (Phase 2)
+                Proceed to Checkout
               </button>
             </div>
           </div>

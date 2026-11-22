@@ -2,6 +2,7 @@ export * from './uuid';
 export * from './env';
 export * from './formatters';
 export * from './pricing';
+export * from './state-machine';
 
 export const ROLES = {
   CUSTOMER: 'CUSTOMER',
