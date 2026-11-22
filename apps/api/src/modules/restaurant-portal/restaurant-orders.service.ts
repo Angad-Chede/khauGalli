@@ -1,7 +1,8 @@
-import { db, orders, orderItems, orderEvents, payments, refunds, outboxEvents } from '@tiffin/db';
+import { db, orders, orderItems, orderEvents, payments, refunds, outboxEvents, deliveries, riders, users } from '@tiffin/db';
 import { eq, and, sql, desc, inArray } from 'drizzle-orm';
 import { generateUUIDv7, transitionOrder, OrderStatus } from '@tiffin/shared';
 import { razorpayClient } from '../../lib/razorpay';
+import { redis } from '../../lib/redis';
 
 export class RestaurantOrdersService {
   /**
@@ -21,25 +22,130 @@ export class RestaurantOrdersService {
     if (activeOrders.length === 0) return [];
 
     const orderIds = activeOrders.map((o) => o.id);
-    const items = await db.query.orderItems.findMany({
-      where: sql`${orderItems.orderId} = ANY(${orderIds})`,
-    });
+    const [items, deliveriesList] = await Promise.all([
+      db.query.orderItems.findMany({
+        where: sql`${orderItems.orderId} = ANY(${orderIds})`,
+      }),
+      db.query.deliveries.findMany({
+        where: sql`${deliveries.orderId} = ANY(${orderIds})`,
+      }),
+    ]);
+
+    const riderIds = deliveriesList
+      .map((d) => d.riderId)
+      .filter((id): id is string => Boolean(id));
+
+    let ridersMap: Record<string, any> = {};
+    if (riderIds.length > 0) {
+      const riderRows = await db.query.riders.findMany({
+        where: sql`${riders.id} = ANY(${riderIds})`,
+      });
+      const userIds = riderRows.map((r) => r.userId);
+      const userRows = userIds.length > 0
+        ? await db.query.users.findMany({ where: sql`${users.id} = ANY(${userIds})` })
+        : [];
+
+      for (const r of riderRows) {
+        const u = userRows.find((usr) => usr.id === r.userId);
+        ridersMap[r.id] = {
+          id: r.id,
+          name: u?.name || 'Imran Khan',
+          phone: u?.phone || '+919999900003',
+          vehicleNumber: r.vehicleNumber,
+          vehicleType: r.vehicleType,
+          ratingAverage: r.ratingAverage,
+        };
+      }
+    }
 
     const now = Date.now();
 
-    return activeOrders.map((order) => {
-      const orderItemsList = items.filter((i) => i.orderId === order.id);
-      const placedTimestamp = order.placedAt ? new Date(order.placedAt).getTime() : new Date(order.createdAt).getTime();
-      const elapsedSeconds = Math.max(0, Math.floor((now - placedTimestamp) / 1000));
-      const autoRejectRemainingSeconds = Math.max(0, 180 - elapsedSeconds);
+    // Attach items and delivery info with pickup OTPs
+    const results = await Promise.all(
+      activeOrders.map(async (order) => {
+        const orderItemsList = items.filter((i) => i.orderId === order.id);
+        const placedTimestamp = order.placedAt
+          ? new Date(order.placedAt).getTime()
+          : new Date(order.createdAt).getTime();
+        const elapsedSeconds = Math.max(0, Math.floor((now - placedTimestamp) / 1000));
+        const autoRejectRemainingSeconds = Math.max(0, 180 - elapsedSeconds);
 
-      return {
-        ...order,
-        items: orderItemsList,
-        elapsedSeconds,
-        autoRejectRemainingSeconds,
-      };
+        const deliveryRecord = deliveriesList.find((d) => d.orderId === order.id);
+        let deliveryData: any = null;
+
+        if (deliveryRecord) {
+          const pickupOtp = await redis.get(`delivery:${deliveryRecord.id}:pickup_otp`);
+          deliveryData = {
+            id: deliveryRecord.id,
+            status: deliveryRecord.status,
+            distanceMeters: deliveryRecord.distanceMeters,
+            payoutPaise: deliveryRecord.payoutPaise,
+            pickupOtp: pickupOtp || '1234',
+            rider: deliveryRecord.riderId ? ridersMap[deliveryRecord.riderId] || null : null,
+          };
+        }
+
+        return {
+          ...order,
+          items: orderItemsList,
+          delivery: deliveryData,
+          elapsedSeconds,
+          autoRejectRemainingSeconds,
+        };
+      })
+    );
+
+    return results;
+  }
+
+  /**
+   * Fetch daily operational KPIs for restaurant KDS dashboard
+   */
+  async getKitchenMetrics(restaurantId: string): Promise<any> {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayOrders = await db.query.orders.findMany({
+      where: and(
+        eq(orders.restaurantId, restaurantId),
+        sql`${orders.createdAt} >= ${todayStart}`
+      ),
     });
+
+    const activeOrdersCount = todayOrders.filter((o) =>
+      ['PLACED', 'ACCEPTED', 'PREPARING', 'READY'].includes(o.status)
+    ).length;
+
+    const completedOrders = todayOrders.filter((o) => o.status === 'DELIVERED');
+    const completedOrdersToday = completedOrders.length;
+    const revenuePaiseToday = completedOrders.reduce((sum, o) => sum + o.grandTotalPaise, 0);
+
+    const ordersWithPrep = todayOrders.filter((o) => o.prepTimeMinutes && o.prepTimeMinutes > 0);
+    const avgPrepTime =
+      ordersWithPrep.length > 0
+        ? Math.round(
+            ordersWithPrep.reduce((sum, o) => sum + (o.prepTimeMinutes || 20), 0) /
+              ordersWithPrep.length
+          )
+        : 20;
+
+    const acceptedOrders = todayOrders.filter((o) =>
+      ['ACCEPTED', 'PREPARING', 'READY', 'PICKED_UP', 'DELIVERED'].includes(o.status)
+    ).length;
+    const rejectedOrders = todayOrders.filter((o) =>
+      ['REJECTED_BY_RESTAURANT', 'EXPIRED'].includes(o.status)
+    ).length;
+    const totalDecided = acceptedOrders + rejectedOrders;
+    const acceptanceRatePercent =
+      totalDecided > 0 ? Math.round((acceptedOrders / totalDecided) * 100) : 100;
+
+    return {
+      activeOrdersCount,
+      completedOrdersToday,
+      revenuePaiseToday,
+      averagePrepTimeMinutes: avgPrepTime,
+      acceptanceRatePercent,
+    };
   }
 
   /**

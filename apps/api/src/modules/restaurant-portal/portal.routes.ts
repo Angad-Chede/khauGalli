@@ -160,6 +160,13 @@ export const restaurantPortalRoutes: FastifyPluginAsync = async (app: FastifyIns
     return reply.send({ orders: activeOrders });
   });
 
+  // GET /r/metrics (Daily KDS operational metrics)
+  app.get('/metrics', async (req: FastifyRequest, reply: FastifyReply) => {
+    const restaurantId = req.staff!.restaurantId;
+    const metrics = await restaurantOrdersService.getKitchenMetrics(restaurantId);
+    return reply.send({ metrics });
+  });
+
   // POST /r/orders/:id/accept
   app.post(
     '/orders/:id/accept',
