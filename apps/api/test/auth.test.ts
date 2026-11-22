@@ -29,6 +29,8 @@ describe('AuthService & Guardrails', () => {
       ALLOW_DEMO_BYPASS_OTP: 'false',
       DATABASE_URL: 'postgresql://postgres:password@localhost:5432/tiffin_db',
       JWT_SECRET: 'super_secure_production_secret_key_32_chars_long',
+      RAZORPAY_KEY_ID: 'rzp_live_real_prod_key_123',
+      RAZORPAY_KEY_SECRET: 'real_prod_secret_456',
     });
     expect(env.NODE_ENV).toBe('production');
     expect(env.ALLOW_DEMO_BYPASS_OTP).toBe('false');

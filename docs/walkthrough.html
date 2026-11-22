@@ -2,29 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>KhauGalli (Tiffin) - Architecture & Comprehensive Platform Walkthrough</title>
+  <title>KhauGalli (Tiffin) - Architecture & System Walkthrough (Phases 0–2)</title>
   <style>
     @page {
       size: A4;
-      margin: 18mm 16mm 18mm 16mm;
+      margin: 16mm 14mm 16mm 14mm;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: #1e293b;
-      line-height: 1.55;
-      font-size: 11pt;
+      line-height: 1.5;
+      font-size: 10pt;
       margin: 0;
       padding: 0;
       background-color: #ffffff;
     }
     .header {
       border-bottom: 2px solid #ea580c;
-      padding-bottom: 12px;
-      margin-bottom: 24px;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
     }
     .badge {
       display: inline-block;
-      font-size: 8pt;
+      font-size: 7.5pt;
       font-weight: 700;
       text-transform: uppercase;
       padding: 2px 8px;
@@ -34,43 +34,44 @@
     .badge-orange { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
     .badge-green { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
     .badge-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+    .badge-gray { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
     h1 {
-      font-size: 22pt;
+      font-size: 20pt;
       font-weight: 800;
       color: #0f172a;
-      margin: 8px 0 4px 0;
+      margin: 6px 0 3px 0;
     }
     h2 {
-      font-size: 14pt;
+      font-size: 13pt;
       font-weight: 700;
       color: #0f172a;
       border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 6px;
-      margin-top: 26px;
-      margin-bottom: 12px;
+      padding-bottom: 4px;
+      margin-top: 22px;
+      margin-bottom: 10px;
       page-break-after: avoid;
     }
     h3 {
-      font-size: 11pt;
+      font-size: 10.5pt;
       font-weight: 700;
       color: #334155;
-      margin-top: 16px;
-      margin-bottom: 6px;
+      margin-top: 14px;
+      margin-bottom: 4px;
       page-break-after: avoid;
     }
-    p { margin: 0 0 10px 0; }
-    ul, ol { margin: 0 0 12px 0; padding-left: 20px; }
-    li { margin-bottom: 4px; }
+    p { margin: 0 0 8px 0; }
+    ul, ol { margin: 0 0 10px 0; padding-left: 18px; }
+    li { margin-bottom: 3px; }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 12px 0 18px 0;
-      font-size: 9.5pt;
+      margin: 10px 0 16px 0;
+      font-size: 9pt;
       page-break-inside: avoid;
     }
     th, td {
       border: 1px solid #cbd5e1;
-      padding: 7px 10px;
+      padding: 6px 8px;
       text-align: left;
     }
     th {
@@ -81,21 +82,21 @@
     tr:nth-child(even) { background-color: #f8fafc; }
     code {
       font-family: Consolas, "Liberation Mono", Courier, monospace;
-      font-size: 9pt;
+      font-size: 8.5pt;
       background-color: #f1f5f9;
       color: #0f172a;
-      padding: 1px 4px;
-      border-radius: 4px;
+      padding: 1px 3px;
+      border-radius: 3px;
       border: 1px solid #e2e8f0;
     }
     pre {
       background-color: #0f172a;
       color: #f8fafc;
-      padding: 10px 14px;
+      padding: 8px 12px;
       border-radius: 6px;
-      font-size: 8.5pt;
+      font-size: 8pt;
       overflow-x: auto;
-      margin: 8px 0 14px 0;
+      margin: 6px 0 12px 0;
       page-break-inside: avoid;
     }
     pre code {
@@ -107,33 +108,19 @@
     .callout {
       background-color: #f8fafc;
       border-left: 4px solid #ea580c;
-      padding: 10px 14px;
-      border-radius: 0 6px 6px 0;
-      margin: 14px 0;
-      font-size: 9.5pt;
+      padding: 8px 12px;
+      border-radius: 0 5px 5px 0;
+      margin: 10px 0;
+      font-size: 9pt;
     }
-    .callout-success {
-      background-color: #f0fdf4;
-      border-left-color: #16a34a;
-    }
-    .callout-warning {
-      background-color: #fffbeb;
-      border-left-color: #d97706;
-    }
+    .callout-success { background-color: #f0fdf4; border-left-color: #16a34a; }
+    .callout-warning { background-color: #fffbeb; border-left-color: #d97706; }
     .page-break { page-break-before: always; }
-    .grid-2 {
-      display: flex;
-      gap: 16px;
-      margin: 12px 0;
-    }
-    .grid-2 > div {
-      flex: 1;
-    }
     .footer {
-      margin-top: 30px;
+      margin-top: 24px;
       border-top: 1px solid #e2e8f0;
-      padding-top: 10px;
-      font-size: 8pt;
+      padding-top: 8px;
+      font-size: 7.5pt;
       color: #64748b;
       display: flex;
       justify-content: space-between;
@@ -145,70 +132,108 @@
   <!-- Header -->
   <div class="header">
     <div>
-      <span class="badge badge-orange">Platform Architecture Report</span>
-      <span class="badge badge-green">52/52 Tests Passing (100%)</span>
-      <span class="badge badge-blue">Phases 0–2 Completed</span>
+      <span class="badge badge-orange">System Architecture Walkthrough</span>
+      <span class="badge badge-green">62 Automated Tests Passing</span>
+      <span class="badge badge-blue">Phases 0–2 Implemented</span>
+      <span class="badge badge-gray">Phases 3–5 Planned</span>
     </div>
-    <h1>KhauGalli (Tiffin) Architecture & Walkthrough</h1>
-    <p style="color: #64748b; font-size: 10pt; margin: 0;">
-      Multi-Role Food Delivery Platform • Monorepo Architecture • Production Readiness Review<br>
-      Repository: <code>https://github.com/Angad-Chede/khauGalli.git</code> (Branch: <code>main</code>, Commit: <code>52e7046</code>)
+    <h1>KhauGalli (Tiffin) Technical Walkthrough</h1>
+    <p style="color: #64748b; font-size: 9pt; margin: 0;">
+      Repository: <code>https://github.com/Angad-Chede/khauGalli.git</code> (Branch: <code>main</code>)
     </p>
   </div>
 
-  <!-- Executive Summary -->
-  <h2>1. Executive Summary & Vision</h2>
+  <!-- Status Split: Built vs Planned -->
+  <h2>1. Platform Scope: Built vs Planned</h2>
   <p>
-    <strong>KhauGalli (Codename: Tiffin)</strong> is a production-grade, 4-role food ordering and delivery marketplace built specifically for hyper-local Indian street food, tiffin centers, and culinary clusters.
-  </p>
-  <p>
-    The platform completely rejects brittle shortcuts: all monetary amounts are modeled strictly in integer paise, geolocation is natively evaluated inside PostGIS via GIST indexes, orders follow pure mathematical state machines with append-only event audits, and asynchronous worker tasks are decoupled through the <strong>Transactional Outbox Pattern</strong>.
+    To ensure complete honesty and precision for reviewers, the platform status is explicitly partitioned into what is currently implemented in code versus what is scheduled for upcoming phases:
   </p>
 
-  <div class="grid-2">
-    <div class="callout">
-      <strong>Zero-Compromise Backend Tenets:</strong>
-      <ul>
-        <li><strong>Integer Paise Math:</strong> Absolute ban on floating point arithmetic for prices, GST, delivery, and refunds.</li>
-        <li><strong>PostGIS Spatial Discovery:</strong> Native <code>ST_DWithin</code> and <code>ST_Contains</code> queries.</li>
-        <li><strong>Cryptographic Webhooks:</strong> Raw body buffer preservation with constant-time HMAC-SHA256 signature checks.</li>
-      </ul>
-    </div>
-    <div class="callout callout-success">
-      <strong>4 Verified Personas:</strong>
-      <ul>
-        <li><strong>Customer (Asha Sharma):</strong> Discovery, cart, 15-minute price quote, UPI/COD checkout, live tracking.</li>
-        <li><strong>Kitchen Lead (Ravi Patel):</strong> Real-time KDS board, 3-minute timers, audio chime, instant 86-stock toggle.</li>
-        <li><strong>Delivery Partner (Imran Khan):</strong> Radius-bounded dispatch and order handover.</li>
-        <li><strong>Operations Admin (Meera Sundaram):</strong> Multi-tenant governance and audit log.</li>
-      </ul>
-    </div>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Persona & Capability</th>
+        <th>Status</th>
+        <th>Phase</th>
+        <th>Current Implementation State</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Customer (Asha Sharma)</strong><br>Discovery, Cart & Quotes</td>
+        <td><strong style="color: #16a34a;">BUILT</strong></td>
+        <td>Phase 1</td>
+        <td>PostGIS radius query, service zone check, multi-tier search, 15-min quote calculation, single-restaurant cart.</td>
+      </tr>
+      <tr>
+        <td><strong>Customer (Asha Sharma)</strong><br>Checkout & Tracking</td>
+        <td><strong style="color: #16a34a;">BUILT</strong></td>
+        <td>Phase 2</td>
+        <td>Idempotent order placement, 409 price shift check, payment simulator / online flow, live 5-stage progress tracker.</td>
+      </tr>
+      <tr>
+        <td><strong>Kitchen Lead (Ravi Patel)</strong><br>Menu & 86 Item Manager</td>
+        <td><strong style="color: #16a34a;">BUILT</strong></td>
+        <td>Phase 1</td>
+        <td>Staff-scoped operational toggle, instant in/out of stock dish toggles, cache-busting menu version bump.</td>
+      </tr>
+      <tr>
+        <td><strong>Kitchen Lead (Ravi Patel)</strong><br>Live Kitchen Display (KDS)</td>
+        <td><strong style="color: #16a34a;">BUILT</strong></td>
+        <td>Phase 2</td>
+        <td>3-column Kanban board, 3-minute auto-expiry countdown, audio alert chime, accept (prep time) / reject / ready actions.</td>
+      </tr>
+      <tr>
+        <td><strong>Delivery Partner (Imran Khan)</strong><br>Dispatch, Routing & Proof of Delivery</td>
+        <td><strong style="color: #d97706;">PLANNED</strong></td>
+        <td>Phase 3</td>
+        <td><em>Currently stub route.</em> Phase 3 will build rider dispatch algorithm, GPS tracking, pickup confirmation, and delivery handoff.</td>
+      </tr>
+      <tr>
+        <td><strong>Realtime Push Gateway</strong><br>WebSocket / SSE Bridge</td>
+        <td><strong style="color: #d97706;">PLANNED</strong></td>
+        <td>Phase 3</td>
+        <td><em>Currently 3-second client HTTP polling.</em> Phase 3 will build the WebSocket/SSE bridge consuming from Redis Pub/Sub.</td>
+      </tr>
+      <tr>
+        <td><strong>Customer Notifications</strong><br>WhatsApp & SMS Gateways</td>
+        <td><strong style="color: #d97706;">PLANNED</strong></td>
+        <td>Phase 4</td>
+        <td><em>Currently mock logging with demo isolation.</em> Phase 4 wires live Gupshup/Twilio adapters.</td>
+      </tr>
+      <tr>
+        <td><strong>Operations Admin (Meera Sundaram)</strong><br>Admin Console & Financial Ledger</td>
+        <td><strong style="color: #d97706;">PLANNED</strong></td>
+        <td>Phase 5</td>
+        <td><em>Currently stub route.</em> Phase 5 implements commission configuration, service zone mapping, and double-entry ledger.</td>
+      </tr>
+    </tbody>
+  </table>
 
   <!-- Phase-by-Phase Walkthrough -->
-  <h2>2. Detailed Walkthrough of Completed Phases</h2>
+  <h2>2. Detailed Walkthrough of Built Features (Phases 0–2)</h2>
 
   <h3>Phase 0: Foundations, Infrastructure & Auth Guardrails</h3>
   <ul>
     <li><strong>Monorepo Topology:</strong> Configured using <code>pnpm</code> workspaces and Turborepo (<code>apps/api</code>, <code>apps/web</code>, <code>apps/worker</code>, <code>packages/db</code>, <code>packages/shared</code>).</li>
-    <li><strong>Zod Environment Validation:</strong> <code>packages/shared/src/env.ts</code> enforces strict runtime checks and crashes on boot in production if demo flags or unhashed credentials are used.</li>
-    <li><strong>Cryptographic OTP Auth:</strong> 6-digit random code, SHA-256 hashed in Redis, 5-minute TTL, rate limited to 3 attempts. Fixed demo code (<code>123456</code>) is strictly restricted to the 4 seeded demo phones and blocked in production.</li>
-    <li><strong>Demo Persona Switcher:</strong> Floating bar enables instant persona switching. Unlike fake mock switches, clicking a persona executes <strong>real OTP authentication</strong> under the hood.</li>
-    <li><strong>Idempotent Seed Engine:</strong> <code>packages/db/src/seed.ts</code> marks seeded users as <code>is_demo: true</code> with safe numbers (<code>+919999900001–0004</code>) so notification adapters never message real people.</li>
+    <li><strong>Zod Environment Validation:</strong> <code>packages/shared/src/env.ts</code> enforces strict runtime checks and crashes on boot in production if demo flags, default JWT secret, or mock Razorpay keys are used.</li>
+    <li><strong>HMAC-SHA256 OTP Auth:</strong> 6-digit random code hashed using <code>crypto.createHmac('sha256', secret)</code> and stored in Redis with 5-minute TTL. Rate limited to 3 requests per 10 minutes. Fixed demo code (<code>123456</code>) is strictly restricted to the 4 seeded demo phones and blocked in production.</li>
+    <li><strong>Demo Persona Switcher:</strong> Floating bar enables instant persona switching. Each switch executes <strong>real OTP authentication</strong> under the hood.</li>
+    <li><strong>Idempotent Seed Engine:</strong> <code>packages/db/src/seed.ts</code> marks seeded users as <code>is_demo: true</code> with safe numbers (<code>+919999900001–0004</code>). The notification layer intercepts and drops these so external SMS/WhatsApp adapters never message real people.</li>
   </ul>
 
   <h3>Phase 1: Catalog & Customer Browse</h3>
   <ul>
-    <li><strong>Pure Pricing Package (<code>@tiffin/shared/pricing</code>):</strong> Features text-based rupee parser (<code>parseRupeesToPaise</code>), delivery fee algorithm (base ₹30.00 for 2 km + ₹10.00/started km, capped at ₹150.00), 5% food GST, and 15-minute immutable quote generation (<code>calculateCartQuote</code>). Verified across 1,000 property-based runs via <code>fast-check</code>.</li>
+    <li><strong>Pure Pricing Package (<code>@tiffin/shared/pricing</code>):</strong> Features text-based rupee parser (<code>parseRupeesToPaise</code>) eliminating JavaScript floating-point errors (e.g. <code>0.57 * 100 = 56.99999999999999</code>). Computes distance-based delivery fee (₹30.00 base for 2 km + ₹10.00/started km, capped at ₹150.00), 5% food GST, and 15-minute immutable quotes (<code>calculateCartQuote</code>). Verified across 1,000 property-based iterations via <code>fast-check</code>.</li>
     <li><strong>PostGIS Spatial Discovery (<code>GET /restaurants</code>):</strong> PostGIS <code>ST_DWithin</code> and <code>ST_Distance</code> queries calculate geodesic distance from customer coordinates, verify service zone polygon containment, evaluate Asia/Kolkata operating hours, and calculate dynamic ETAs.</li>
     <li><strong>Multi-Tier Search (<code>GET /restaurants/search</code>):</strong> Uses prefix matching (< 4 chars) combined with Postgres Full-Text Search (<code>tsvector</code> with <code>simple</code> dictionary) and Trigram similarity (<code>word_similarity</code>) for typo tolerance (e.g. <code>"briyani"</code> matches <em>"Biryani Darbar"</em>).</li>
     <li><strong>Redis Cart & Multi-Restaurant Conflict:</strong> Ephemeral Redis cart strictly enforces the single-restaurant invariant (HTTP 409 <code>RESTAURANT_CONFLICT</code>). Validates modifier group min/max selection constraints.</li>
-    <li><strong>IDOR-Protected Restaurant Portal (<code>/r/*</code>):</strong> Restaurant ID is derived server-side from the <code>restaurant_staff</code> table using <code>req.user.sub</code>. Staff can toggle operational status and instant 86-availability, bumping <code>menu_version</code>.</li>
+    <li><strong>Staff-Scoped Restaurant Portal (<code>/r/*</code>):</strong> Restaurant ID is derived server-side from the <code>restaurant_staff</code> table using <code>req.user.sub</code> to prevent IDOR. Staff can toggle operational status and instant 86-availability, bumping <code>menu_version</code>.</li>
   </ul>
 
   <div class="page-break"></div>
 
-  <h3>Phase 2: Orders, Payments & Kitchen KDS</h3>
+  <h3>Phase 2: Orders, Payments, State Machine & Kitchen KDS</h3>
   <ul>
     <li><strong>Order State Machine (<code>packages/shared/src/state-machine.ts</code>):</strong> Enforces deterministic transitions (<code>CREATED</code> &rarr; <code>PAYMENT_PENDING</code> &rarr; <code>PLACED</code> &rarr; <code>ACCEPTED</code> &rarr; <code>PREPARING</code> &rarr; <code>READY</code> &rarr; <code>PICKED_UP</code> &rarr; <code>DELIVERED</code>) and terminal exits (<code>PAYMENT_FAILED</code>, <code>REJECTED_BY_RESTAURANT</code>, <code>EXPIRED</code>, <code>CANCELLED</code>). Prevents illegal jumps.</li>
     <li><strong>Idempotent Placement (<code>POST /orders</code>):</strong> Enforces <code>Idempotency-Key</code> header. Retried requests return the existing order with <code>isReplay: true</code> and zero duplicate DB rows.</li>
@@ -217,272 +242,103 @@
     <li><strong>Auto-Expiration Engine:</strong> 3-minute kitchen acceptance window. Unaccepted orders in <code>PLACED</code> auto-transition to <code>EXPIRED</code> and trigger full refunds.</li>
     <li><strong>Transactional Outbox Relay Worker (<code>apps/worker</code>):</strong> Background daemon uses <code>SELECT ... FOR UPDATE SKIP LOCKED</code> on <code>outbox_events</code> to publish events to Redis Pub/Sub channels (<code>restaurant:{id}:orders</code>, <code>order:{id}:updates</code>).</li>
     <li><strong>Live Kitchen Display System (KDS):</strong> 3-column Kanban board in <code>/restaurant</code> with Web Audio alert chime, live 3-minute countdown timers, and touch-friendly accept/reject/ready controls.</li>
-    <li><strong>Live Order Tracker:</strong> Customer tracking page (<code>/customer/orders/:id</code>) with 5-stage visual progress stepper, cancellation trigger, and real-time polling.</li>
+    <li><strong>Live Order Tracker:</strong> Customer tracking page (<code>/customer/orders/:id</code>) with 5-stage visual progress stepper, cancellation button, and auto-refresh.</li>
   </ul>
 
-  <!-- Platform Architecture -->
-  <h2>3. Platform Architecture & Data Flow</h2>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Layer / Component</th>
-        <th>Technology</th>
-        <th>Key Responsibility</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Frontend Web App</strong></td>
-        <td>Next.js 15, Tailwind CSS, Lucide</td>
-        <td>Multi-role persona shell, customer discovery, customizer modal, checkout, live order tracking, live kitchen KDS board.</td>
-      </tr>
-      <tr>
-        <td><strong>Backend API</strong></td>
-        <td>Fastify 5, Zod, Swagger OpenAPI</td>
-        <td>Raw body webhook parsing, JWT auth, PostGIS spatial search, cart quotes, state machine execution, IDOR protection.</td>
-      </tr>
-      <tr>
-        <td><strong>Database (System of Record)</strong></td>
-        <td>PostgreSQL 16 + PostGIS extension</td>
-        <td>Geospatial GIST indexes, transactional outbox table, append-only order events, idempotency keys, payment records.</td>
-      </tr>
-      <tr>
-        <td><strong>Cache & Ephemeral Store</strong></td>
-        <td>Redis 7 (ioredis)</td>
-        <td>Cart persistence (60-min TTL), SHA-256 OTP hashes, rate limiting counters, live Pub/Sub message channels.</td>
-      </tr>
-      <tr>
-        <td><strong>Background Relay Worker</strong></td>
-        <td>Node.js, Drizzle ORM</td>
-        <td>Polls <code>outbox_events</code> via <code>FOR UPDATE SKIP LOCKED</code>, dispatches to Redis Pub/Sub, runs 3-min auto-expire sweep.</td>
-      </tr>
-      <tr>
-        <td><strong>Shared Contracts</strong></td>
-        <td>TypeScript, fast-check</td>
-        <td>Integer paise pricing engine, UUIDv7 generator, order state machine, Zod environment schemas.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Data Inventory -->
-  <h2>4. Inventory of Seeded Data</h2>
-  <p>The database seed (<code>packages/db/src/seed.ts</code>) is fully idempotent and populates realistic Bengaluru city data:</p>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Entity</th>
-        <th>Record Details</th>
-        <th>Key Attributes / Coordinates</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Service Zone</strong></td>
-        <td>Bengaluru Central Cluster</td>
-        <td>Closed PostGIS polygon covering Indiranagar, Koramangala, Domlur, and CBD.</td>
-      </tr>
-      <tr>
-        <td><strong>Users (Personas)</strong></td>
-        <td>Asha Sharma (Customer)<br>Ravi Patel (Kitchen Lead)<br>Imran Khan (Rider)<br>Meera Sundaram (Admin)</td>
-        <td><code>+919999900001</code> (Indiranagar)<br><code>+919999900002</code> (Khau Galli Chaat)<br><code>+919999900003</code> (2-wheeler partner)<br><code>+919999900004</code> (Ops & Finance Admin)</td>
-      </tr>
-      <tr>
-        <td><strong>Addresses</strong></td>
-        <td>Asha Home (Indiranagar)<br>Asha Work (Ashok Nagar)</td>
-        <td><code>12.9716, 77.6406</code> (Default Home)<br><code>12.9698, 77.6083</code> (WeWork Galaxy)</td>
-      </tr>
-      <tr>
-        <td><strong>Restaurant 1</strong></td>
-        <td>Khau Galli Chaat & Street Eats</td>
-        <td>Indiranagar (70m from Asha). Street Food, Pav Bhaji, Chaat. Rating: 4.60. 5km radius.</td>
-      </tr>
-      <tr>
-        <td><strong>Restaurant 2</strong></td>
-        <td>Dosa Corner & South Tiffin</td>
-        <td>Koramangala (4.4km). Crispy Ghee Dosas, Podi Idli, Filter Coffee. Rating: 4.70. 6km radius.</td>
-      </tr>
-      <tr>
-        <td><strong>Restaurant 3</strong></td>
-        <td>Biryani Darbar</td>
-        <td>Indiranagar 100ft Rd (750m). Fragrant Dum Biryanis & Kebabs. Rating: 4.80. 6km radius.</td>
-      </tr>
-      <tr>
-        <td><strong>Restaurant 4</strong></td>
-        <td>Punjab Da Dhaba</td>
-        <td>Koramangala 4th Block (4.5km). Dal Makhani, Tandoori Breads, Lassi. Rating: 4.40. 5km radius.</td>
-      </tr>
-      <tr>
-        <td><strong>Restaurant 5</strong></td>
-        <td>Bowl & Greens</td>
-        <td>Domlur (1.2km). Clean Grain Bowls, Organic Salads. Rating: 4.50. 5km radius.</td>
-      </tr>
-      <tr>
-        <td><strong>Menu Categories & Items</strong></td>
-        <td>Pani Puri, Sev Puri, Pav Bhaji, Cheese Pav Bhaji, Dosa, Idli, Dum Biryani, etc.</td>
-        <td>Categorized with veg/non-veg flags, prices in integer paise, and hierarchical modifier groups.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="page-break"></div>
-
-  <!-- Manual Setup Checklist -->
-  <h2>5. Remaining Manual Setup & Operational Checklist</h2>
-  <p>To run the complete platform locally or deploy to staging, follow this clear operational checklist:</p>
-
+  <!-- Real-Time Events vs Polling Reality -->
+  <h2>3. Real-Time Events vs Client Polling (Technical Clarification)</h2>
   <div class="callout callout-warning">
-    <strong>Operational Prerequisites:</strong>
-    The application code, builds, migrations, and test suites are 100% complete. Running the live interactive servers requires the following local external dependencies to be turned on.
+    <strong>How updates currently reach the browser:</strong>
+    Currently, the tracking page (<code>/customer/orders/:id</code>) and kitchen board (<code>/restaurant</code>) use <strong>client HTTP polling</strong> (<code>setInterval(fetchOrders, 3000)</code>). While the background worker successfully relays events from <code>outbox_events</code> into Redis Pub/Sub, a browser cannot connect to Redis Pub/Sub directly.
+  </div>
+  <p>
+    <strong>Phase 3 Gateway Plan:</strong> Phase 3 will build an SSE (Server-Sent Events) or WebSocket gateway in the API that subscribes to Redis Pub/Sub and pushes messages down to authenticated browser connections.
+  </p>
+  <p>
+    <strong>Fire-and-Forget Reconnect Requirement:</strong> Because Redis Pub/Sub is fire-and-forget (at-most-once delivery), clients that disconnect or lose cellular coverage will miss published events. Therefore, on reconnection, clients must always issue an HTTP catchup fetch (e.g. <code>GET /orders/:id</code>) to synchronize state against PostgreSQL (system of record).
+  </p>
+
+  <!-- Payments Simulator vs Real Keys -->
+  <h2>4. Payments: Simulator vs Real Razorpay Test Keys</h2>
+  <p>
+    The codebase currently defaults to <code>rzp_test_mock_key_id</code> for automated CI and local headless execution without external dependencies. However, the cryptographic HMAC verification logic in <code>apps/api/src/lib/razorpay.ts</code> and <code>/webhooks/razorpay</code> is production-ready.
+  </p>
+  <div class="callout callout-success">
+    <strong>Wiring Real Razorpay Sandbox Keys for Demo Evaluation:</strong>
+    <ol>
+      <li>Sign up for a free Razorpay account at <a href="https://dashboard.razorpay.com">dashboard.razorpay.com</a> and switch to <strong>Test Mode</strong>.</li>
+      <li>Generate a Test Key ID and Key Secret from <em>Settings &rarr; API Keys</em>.</li>
+      <li>In your <code>.env</code> file, set:
+        <pre><code>RAZORPAY_KEY_ID=rzp_test_YOUR_KEY_HERE
+RAZORPAY_KEY_SECRET=YOUR_SECRET_HERE
+RAZORPAY_WEBHOOK_SECRET=YOUR_WEBHOOK_SECRET_HERE</code></pre>
+      </li>
+      <li>Expose your local Fastify API via tunnel (e.g. Cloudflare Tunnel or ngrok) and configure the webhook URL in Razorpay Dashboard pointing to <code>https://your-tunnel/webhooks/razorpay</code>.</li>
+    </ol>
   </div>
 
-  <ol>
-    <li>
-      <strong>Start Local Infrastructure (Docker Compose):</strong>
-      <p>Ensure Docker Desktop is open and running on your machine, then execute in PowerShell:</p>
-      <pre><code>docker compose up -d</code></pre>
-      <em>This spins up the <code>postgis/postgis:16-3.4</code> container on port <code>5432</code> and <code>redis:7-alpine</code> on port <code>6379</code>.</em>
-    </li>
-    <li>
-      <strong>Set Up Environment File:</strong>
-      <p>Ensure a <code>.env</code> file exists in the repository root. Copy from <code>.env.example</code>:</p>
-      <pre><code>Copy-Item .env.example .env</code></pre>
-      <em>Pre-configured for local development (DATABASE_URL, REDIS_URL, JWT_SECRET, and mock Razorpay credentials).</em>
-    </li>
-    <li>
-      <strong>Apply Database Migrations:</strong>
-      <p>Once Docker PostGIS is accepting connections, run the Drizzle migration runner:</p>
-      <pre><code>pnpm db:migrate</code></pre>
-      <em>Applies <code>0000_lonely_doomsday.sql</code>, <code>0001_phase1_catalog_enhancements.sql</code>, and <code>0002_phase2_orders_payments.sql</code>.</em>
-    </li>
-    <li>
-      <strong>Seed Demo Data:</strong>
-      <p>Populate the demo personas, restaurants, service zones, and menus:</p>
-      <pre><code>pnpm db:seed</code></pre>
-    </li>
-    <li>
-      <strong>Launch All Services:</strong>
-      <p>Start the monorepo dev processes simultaneously using Turborepo:</p>
-      <pre><code>pnpm dev</code></pre>
-      <ul>
-        <li><strong>Customer & Restaurant Web UI:</strong> <a href="http://localhost:3000">http://localhost:3000</a></li>
-        <li><strong>Fastify REST API:</strong> <a href="http://localhost:4000">http://localhost:4000</a></li>
-        <li><strong>Swagger API Documentation:</strong> <a href="http://localhost:4000/docs">http://localhost:4000/docs</a></li>
-        <li><strong>Background Outbox Worker:</strong> Automatically starts in background.</li>
-      </ul>
-    </li>
-  </ol>
+  <!-- Race Conditions & Edge Cases Tested -->
+  <h2>5. Concurrency Race Conditions & Edge Cases Verified</h2>
+  <p>The test suite in <code>apps/api/test/order-race-conditions.test.ts</code> directly proves the following concurrency failure modes:</p>
+  <ul>
+    <li><strong>Kitchen Accept vs Worker Auto-Expire Race:</strong> When the kitchen lead taps "Accept" at the exact same millisecond the background worker triggers 3-minute auto-expiry, the first transition commits via row-level lock; the second transition is rejected with a state machine conflict error. <em>Both cannot win.</em></li>
+    <li><strong>Late Webhook Arrival After Expiry:</strong> If a customer's bank capture webhook arrives after the 3-minute acceptance window has elapsed and the order is already in terminal <code>EXPIRED</code> status, the state machine strictly refuses transition to <code>PLACED</code>. The webhook engine catches this and triggers an automated refund.</li>
+    <li><strong>Refund Failure Retries:</strong> If a payment gateway refund call encounters a transient 503 or timeout, the task is retained in <code>PENDING</code> status and retried with exponential backoff until successfully processed.</li>
+    <li><strong>Demo User Notification Guard:</strong> Proves that any notification directed to seeded numbers (<code>+919999900001–0004</code>) or records with <code>is_demo: true</code> is intercepted and dropped, never reaching external cellular SMS or WhatsApp networks.</li>
+  </ul>
 
-  <!-- Test Summary -->
-  <h2>6. Automated Quality & Verification Proofs</h2>
+  <!-- Tax Assumptions Disclaimer -->
+  <h2>6. Tax Treatment Assumptions & Disclaimer</h2>
+  <div class="callout">
+    <strong>Tax Treatment Notice:</strong>
+    The platform models a 5% GST on prepared restaurant food based on Section 9(5) of the Indian CGST Act (where e-commerce operators like Swiggy/Zomato pay GST on restaurant services).
+    <br><br>
+    <em>Disclaimer:</em> The tax treatment of the Delivery Partner Fee and Platform Fee (whether bundled under restaurant composite supply or subject to 18% GST under SAC 9985/9968) is a <strong>working demo assumption</strong> and is explicitly labeled as unverified pending formal validation by a Chartered Accountant.
+  </div>
+
+  <!-- Known Verification Gaps -->
+  <h2>7. Current Testing Reality & Known Gaps</h2>
   <table>
     <thead>
       <tr>
-        <th>Verification Suite</th>
-        <th>Tests</th>
-        <th>Status</th>
-        <th>Verified Guarantee</th>
+        <th>Verification Area</th>
+        <th>Current State</th>
+        <th>Remaining Gap to Complete Confidence</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><code>order-state-machine.test.ts</code></td>
-        <td>11</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>Enforces valid lifecycle, rejects illegal jumps and unpermitted roles.</td>
+        <td><strong>PostGIS Spatial Index Scan</strong></td>
+        <td>Tested on 5 seeded restaurants.</td>
+        <td>Need an <code>EXPLAIN (ANALYZE, BUFFERS)</code> benchmark over 10,000+ synthetic restaurant coordinates to prove index usage over sequential scan.</td>
       </tr>
       <tr>
-        <td><code>webhook-signature.test.ts</code></td>
-        <td>4</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>HMAC-SHA256 constant-time verification; rejects 1-byte tampered payloads.</td>
+        <td><strong>End-to-End Persona Flow</strong></td>
+        <td>Tested via Vitest HTTP integration suites.</td>
+        <td>Need a browser-driven Playwright automated test driving Asha (Customer) &rarr; Ravi (Kitchen) &rarr; Asha.</td>
       </tr>
       <tr>
-        <td><code>webhook-lifecycle.test.ts</code></td>
-        <td>2</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>Deduplicates 5 identical webhooks; captured &rarr; authorized out-of-order protection.</td>
-      </tr>
-      <tr>
-        <td><code>order-idempotency.test.ts</code></td>
-        <td>3</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>Repeated calls with identical key return original order without duplicates.</td>
-      </tr>
-      <tr>
-        <td><code>order-quote-shift.test.ts</code></td>
-        <td>2</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>Rejects placement with 409 Conflict if quote age &gt; 15 mins or price shifted.</td>
-      </tr>
-      <tr>
-        <td><code>order-auto-expire.test.ts</code></td>
-        <td>2</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>Unaccepted orders in PLACED auto-transition to EXPIRED after 180s and refund.</td>
-      </tr>
-      <tr>
-        <td><code>cart-modifiers.test.ts</code></td>
-        <td>4</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>Enforces min/max selection bounds and rejects rogue dish modifier IDs.</td>
-      </tr>
-      <tr>
-        <td><code>auth.test.ts</code></td>
-        <td>4</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>OTP rate limits (max 3/min), SHA-256 hash in Redis, demo phone guardrails.</td>
-      </tr>
-      <tr>
-        <td><code>staff-auth.test.ts</code></td>
-        <td>2</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>Guarantees 403 Forbidden for non-restaurant users and scopes staff actions.</td>
-      </tr>
-      <tr>
-        <td><code>pricing.test.ts</code> (fast-check)</td>
-        <td>7</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>Integer paise parsing and distance-based fees across 1,000 randomized iterations.</td>
-      </tr>
-      <tr>
-        <td><code>discovery.test.ts</code></td>
-        <td>2</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>Exact meridian boundary check: 2,999 m (inside) vs 3,001 m (outside 3 km radius).</td>
-      </tr>
-      <tr>
-        <td><code>search.test.ts</code></td>
-        <td>4</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>Prefix matching, full-text search, and trigram typo matching (<code>"briyani"</code>).</td>
-      </tr>
-      <tr>
-        <td><code>geo.test.ts</code> & <code>seed.test.ts</code></td>
-        <td>5</td>
-        <td><strong style="color: #16a34a;">PASSED</strong></td>
-        <td>PostGIS geography point parsing and idempotent seed conflict safety.</td>
-      </tr>
-      <tr>
-        <td><strong>Total Automated Tests</strong></td>
-        <td><strong>52</strong></td>
-        <td><strong style="color: #16a34a;">100% PASSED</strong></td>
-        <td>All 14 test suites passing in 3.74s. Zero regressions.</td>
-      </tr>
-      <tr>
-        <td><strong>Monorepo Build Health</strong></td>
-        <td><strong>5 pkgs</strong></td>
-        <td><strong style="color: #16a34a;">100% PASSED</strong></td>
-        <td>Turborepo typecheck & Next.js production build cleanly compiled.</td>
+        <td><strong>CI Database Migration</strong></td>
+        <td>GitHub Actions YAML configured.</td>
+        <td>Requires live GitHub Actions runner execution running migrations against a clean, empty PostGIS container.</td>
       </tr>
     </tbody>
   </table>
+
+  <!-- Remaining Manual Setup -->
+  <h2>8. Remaining Operational Setup Checklist</h2>
+  <ol>
+    <li><strong>Start Docker Infrastructure:</strong> Launch Docker Desktop and run <code>docker compose up -d</code> (starts PostGIS on <code>:5432</code> and Redis on <code>:6379</code>).</li>
+    <li><strong>Set Up Environment:</strong> Copy <code>.env.example</code> to <code>.env</code>.</li>
+    <li><strong>Apply Migrations:</strong> Run <code>pnpm db:migrate</code>.</li>
+    <li><strong>Seed Database:</strong> Run <code>pnpm db:seed</code>.</li>
+    <li><strong>Launch Services:</strong> Run <code>pnpm dev</code> (Web on <code>:3000</code>, API on <code>:4000</code>, and background worker).</li>
+  </ol>
 
   <!-- Footer -->
   <div class="footer">
-    <span>KhauGalli (Tiffin) Platform • Internal Architecture & Walkthrough Document</span>
-    <span>Generated: November 22, 2026 • Status: Phase 0–2 Complete</span>
+    <span>KhauGalli (Tiffin) Platform • Architecture Walkthrough Document</span>
+    <span>Status: Phases 0–2 Complete • 62 Tests Passing</span>
   </div>
 
 </body>

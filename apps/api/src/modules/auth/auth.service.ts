@@ -42,7 +42,8 @@ export class AuthService {
   }
 
   private hashSecret(value: string): string {
-    return crypto.createHash('sha256').update(value).digest('hex');
+    const hmacSecret = this.jwtSecret || 'tiffin_default_hmac_secret_key';
+    return crypto.createHmac('sha256', hmacSecret).update(value).digest('hex');
   }
 
   /**
