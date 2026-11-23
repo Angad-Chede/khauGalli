@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS "addresses" (
 	"label" varchar(50) NOT NULL,
 	"line1" text NOT NULL,
 	"landmark" text,
-	"geog" "geography(Point, 4326)" NOT NULL,
+	"geog" geography(Point, 4326) NOT NULL,
 	"is_default" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS "addresses" (
 CREATE TABLE IF NOT EXISTS "service_zones" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"name" varchar(100) NOT NULL,
-	"boundary" "geography(Polygon, 4326)" NOT NULL,
+	"boundary" geography(Polygon, 4326) NOT NULL,
 	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS "restaurants" (
 	"slug" varchar(200) NOT NULL,
 	"description" text,
 	"cuisine_types" text[] NOT NULL,
-	"geog" "geography(Point, 4326)" NOT NULL,
+	"geog" geography(Point, 4326) NOT NULL,
 	"is_open" boolean DEFAULT true NOT NULL,
 	"operating_hours" jsonb NOT NULL,
 	"prep_time_default_minutes" integer DEFAULT 20 NOT NULL,

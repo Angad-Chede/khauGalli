@@ -9,6 +9,11 @@ export async function runMigrations() {
   await directClient.connect();
 
   try {
+    console.log('Ensuring PostgreSQL extensions (postgis, pg_trgm, pgcrypto)...');
+    await directClient.query('CREATE EXTENSION IF NOT EXISTS postgis;');
+    await directClient.query('CREATE EXTENSION IF NOT EXISTS pg_trgm;');
+    await directClient.query('CREATE EXTENSION IF NOT EXISTS pgcrypto;');
+
     const drizzleDb = drizzle(directClient);
     const migrationsFolder = path.resolve(process.cwd(), 'drizzle');
     console.log(`Applying Drizzle migrations from: ${migrationsFolder}`);
