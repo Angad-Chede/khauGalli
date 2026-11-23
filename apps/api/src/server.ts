@@ -11,6 +11,7 @@ import { orderRoutes } from './modules/orders/order.routes';
 import { paymentRoutes } from './modules/payments/payment.routes';
 import { sseRealtimeRoutes } from './modules/realtime/sse.routes';
 import { deliveryRoutes } from './modules/deliveries/delivery.routes';
+import { adminRoutes } from './modules/admin/admin.routes';
 
 export async function buildServer(): Promise<FastifyInstance> {
   const server = Fastify({
@@ -81,6 +82,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   await server.register(paymentRoutes);
   await server.register(sseRealtimeRoutes, { prefix: '/realtime' });
   await server.register(deliveryRoutes, { prefix: '/rider' });
+  await server.register(adminRoutes, { prefix: '/admin' });
 
   return server;
 }

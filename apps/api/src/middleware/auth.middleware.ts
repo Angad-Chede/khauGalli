@@ -103,3 +103,24 @@ export async function requireStaffMember(req: FastifyRequest, reply: FastifyRepl
     });
   }
 }
+
+/**
+ * Strict Super-Admin RBAC guard:
+ * Verifies authenticated user has the 'ADMIN' role in their verified JWT.
+ * Rejects non-admin users with HTTP 403 Forbidden.
+ */
+export async function requireAdmin(req: FastifyRequest, reply: FastifyReply) {
+  await authenticate(req, reply);
+  if (reply.sent) return;
+
+  if (!req.user) {
+    return reply.status(401).send({ error: 'Authentication required' });
+  }
+
+  if (!req.user.roles || !req.user.roles.includes('ADMIN')) {
+    return reply.status(403).send({
+      error: 'Forbidden: Super-Admin access required.',
+      code: 'ADMIN_ACCESS_REQUIRED',
+    });
+  }
+}
